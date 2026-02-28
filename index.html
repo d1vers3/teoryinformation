@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CryptoLab — Вариант 7</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+  <div class="logo">CRYPTO<span>LAB</span></div>
+  <div class="badge">Вариант 7 / Lab 1</div>
+</header>
+
+<!-- ALGO SELECT -->
+<div class="algo-selector">
+  <button class="algo-btn active" id="btnGrille" onclick="switchAlgo('grille')">
+    <div class="algo-name">🔲 Поворачивающаяся решётка</div>
+    <div class="algo-desc">Английский язык · визуальный ключ</div>
+  </button>
+  <button class="algo-btn blue" id="btnVigenere" onclick="switchAlgo('vigenere')">
+    <div class="algo-name">🔑 Шифр Виженера</div>
+    <div class="algo-desc">Русский язык · прогрессивный ключ</div>
+  </button>
+</div>
+
+<!-- MODE TOGGLE -->
+<div class="mode-toggle">
+  <span>Текст</span>
+  <label class="toggle-switch">
+    <input type="checkbox" id="modeToggle" onchange="switchMode()">
+    <span class="toggle-slider"></span>
+  </label>
+  <span>Файл</span>
+</div>
+
+<hr class="divider">
+
+<!-- ═══════════════════════════════════════════════
+     GRILLE SECTION
+═══════════════════════════════════════════════ -->
+<div id="grilleSection">
+
+  <!-- Grille visual display -->
+  <div class="grille-wrap">
+    <div class="grille-controls">
+      <span class="grille-hint" id="grilleHint">Введите текст и нажмите «Зашифровать»</span>
+    </div>
+
+    <div class="grille-outer">
+      <div>
+        <div class="grille-section-title">Решётка (дырки красные)</div>
+        <div class="grille-grid" id="grilleEditor"></div>
+      </div>
+      <div>
+        <div class="grille-section-title">Предпросмотр всех 4 поворотов</div>
+        <div class="grille-preview-grid" id="grillePreview"></div>
+        <div class="info-box" id="grilleInfo">
+          Зашифруйте текст — решётка и дырки сгенерируются автоматически.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEXT MODE -->
+  <div class="container" id="grilleTextMode">
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>Исходный текст</div>
+      <div class="field">
+        <textarea id="grilleInput" placeholder="Enter text in English..."></textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="grilleProcess(false)">Зашифровать</button>
+        <button class="btn btn-primary" style="background:#7f8c8d;" onclick="grilleProcess(true)">Дешифровать</button>
+        <button class="btn btn-ghost" onclick="clearFields('grilleInput','grilleOutput')">Очистить</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>Результат</div>
+      <div class="field">
+        <textarea id="grilleOutput" readonly placeholder="Result will appear here..."></textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost btn-small" onclick="copyText('grilleOutput')">Копировать</button>
+        <button class="btn btn-ghost btn-small" onclick="swapTexts('grilleInput','grilleOutput')">↕ Поменять местами</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILE MODE -->
+  <div class="container hidden" id="grilleFileMode">
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>Входной файл</div>
+      <label class="file-zone" id="grilleFileZone" for="grilleFileInput" ondragover="dragOver(event,'grilleFileZone')" ondragleave="dragLeave('grilleFileZone')" ondrop="dropFile(event,'grilleFileInput','grilleFileZone')">
+        <div class="file-icon">📄</div>
+        <div class="file-name" id="grilleFileName">Выберите .txt файл</div>
+        <div class="file-sub">или перетащите сюда</div>
+      </label>
+      <input type="file" id="grilleFileInput" accept=".txt" onchange="fileSelected('grilleFileInput','grilleFileName')">
+      <div class="btn-row" style="margin-top:14px;">
+        <button class="btn btn-primary" onclick="grilleFileProcess(false)">Зашифровать</button>
+        <button class="btn btn-primary" style="background:#7f8c8d;" onclick="grilleFileProcess(true)">Дешифровать</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot"></span>Результат</div>
+      <div class="info-box">После обработки появится кнопка скачивания файла.</div>
+      <a id="grilleDownload" class="download-link hidden">⬇ Скачать результат</a>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     VIGENERE SECTION
+═══════════════════════════════════════════════ -->
+<div id="vigenereSection" class="hidden">
+
+  <!-- TEXT MODE -->
+  <div class="container" id="vigTextMode">
+    <div class="card">
+      <div class="card-title"><span class="dot blue"></span>Исходный текст</div>
+      <div class="field">
+        <label class="field-label">Ключевое слово (русский)</label>
+        <input type="text" id="vigKey" placeholder="Введите ключ...">
+      </div>
+      <div class="field">
+        <textarea id="vigInput" placeholder="Введите текст на русском..."></textarea>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary blue" onclick="vigProcess(false)">Зашифровать</button>
+        <button class="btn btn-primary" style="background:#7f8c8d;" onclick="vigProcess(true)">Дешифровать</button>
+        <button class="btn btn-ghost" onclick="clearFields('vigInput','vigOutput')">Очистить</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot blue"></span>Результат</div>
+      <div class="field">
+        <textarea id="vigOutput" readonly placeholder="Результат..."></textarea>
+      </div>
+      <div class="info-box">
+        <strong>Прогрессивный ключ:</strong> на каждом шаге ключ сдвигается на +1 по алфавиту.<br>
+        Например, ключ АБВ → А, Б+1=В, В+1=Г, затем А+3=Г, ...
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost btn-small" onclick="copyText('vigOutput')">Копировать</button>
+        <button class="btn btn-ghost btn-small" onclick="swapTexts('vigInput','vigOutput')">↕ Поменять местами</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILE MODE -->
+  <div class="container hidden" id="vigFileMode">
+    <div class="card">
+      <div class="card-title"><span class="dot blue"></span>Входной файл</div>
+      <div class="field" style="margin-bottom:14px;">
+        <label class="field-label">Ключевое слово (русский)</label>
+        <input type="text" id="vigFileKey" placeholder="Введите ключ...">
+      </div>
+      <label class="file-zone" id="vigFileZone" for="vigFileInput" ondragover="dragOver(event,'vigFileZone')" ondragleave="dragLeave('vigFileZone')" ondrop="dropFile(event,'vigFileInput','vigFileZone')">
+        <div class="file-icon">📄</div>
+        <div class="file-name" id="vigFileName">Выберите .txt файл</div>
+        <div class="file-sub">или перетащите сюда</div>
+      </label>
+      <input type="file" id="vigFileInput" accept=".txt" onchange="fileSelected('vigFileInput','vigFileName')">
+      <div class="btn-row" style="margin-top:14px;">
+        <button class="btn btn-primary blue" onclick="vigFileProcess(false)">Зашифровать</button>
+        <button class="btn btn-primary" style="background:#7f8c8d;" onclick="vigFileProcess(true)">Дешифровать</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="dot blue"></span>Результат</div>
+      <div class="info-box">После обработки появится кнопка скачивания файла.</div>
+      <a id="vigDownload" class="download-link hidden">⬇ Скачать результат</a>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
