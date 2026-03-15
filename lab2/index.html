@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stream Cipher — LFSR</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+  <h1>Stream Cipher</h1>
+  <p>LFSR · Linear Feedback Shift Register · m = 40</p>
+</header>
+
+<div class="app">
+
+  <!-- ── Main card ── -->
+  <div class="card">
+    <div class="card-title">Конфигурация шифра</div>
+
+    <div class="poly-info">
+      P(x) = x⁴⁰ + x²¹ + x¹⁹ + x² + 1 &nbsp;&nbsp;|&nbsp;&nbsp;
+      Отводы: биты 40, 21, 19, 2 &nbsp;&nbsp;|&nbsp;&nbsp;
+      Период: 2⁴⁰ − 1
+    </div>
+
+    <!-- Mode selector -->
+    <div class="mode-tabs">
+      <button class="mode-tab active-enc" id="tabEnc" onclick="setMode('enc')">🔒 Шифрование</button>
+      <button class="mode-tab"            id="tabDec" onclick="setMode('dec')">🔓 Дешифрование</button>
+    </div>
+
+    <!-- Key input -->
+    <div class="key-row">
+      <span class="key-label">Ключ:</span>
+      <input
+        type="text"
+        id="tbKey"
+        placeholder="Введите ровно 40 бит (только 0 и 1)…"
+        oninput="onKeyInput(this)"
+        maxlength="80"
+      />
+      <span class="key-count bad" id="keyCount">0 / 40</span>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Action buttons -->
+    <div class="btn-row">
+      <button class="btn-blue" id="btnOpen" onclick="openFile()">📂 Выбрать файл</button>
+      <button class="btn-green" id="btnAction" onclick="doProcess()" disabled>🔒 Шифровать</button>
+    </div>
+
+    <div class="file-info" id="fileInfo">
+      Файл: <span id="fileNameSpan">—</span> &nbsp; (<span id="fileSizeSpan">—</span>)
+    </div>
+    <div class="file-info" id="saveInfo">
+      Сохранено как: <span id="saveNameSpan">—</span>
+    </div>
+
+    <div class="status" id="statusBar">
+      <div class="status-dot"></div>
+      <span id="statusText">Выберите режим, введите ключ (40 бит) и выберите файл</span>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Binary displays -->
+    <div class="field-label" id="labelIn">Исходный файл — первые 8 байт (двоичный вид)</div>
+    <div class="bin-field src" id="tbIn">—</div>
+
+    <div class="field-label">Сгенерированный ключ — первые 8 байт (двоичный вид)</div>
+    <div class="bin-field key-out" id="tbGenKey">—</div>
+
+    <div class="field-label out-enc" id="labelOut">Зашифрованный файл — первые 8 байт (двоичный вид)</div>
+    <div class="bin-field enc" id="tbOut">—</div>
+  </div>
+
+  <!-- ── LFSR step table ── -->
+  <div class="card">
+    <div class="card-title">Пошаговая работа LFSR (60 тактов)</div>
+    <div class="ticks-header">
+      <span>Такт → состояние регистра до сдвига → бит обратной связи → выходной бит</span>
+      <span class="badge" id="ticksBadge">0 тактов</span>
+    </div>
+    <div class="table-wrap" id="tableWrap">
+      <div class="empty">Выполните шифрование или дешифрование — появится таблица тактов LFSR</div>
+    </div>
+  </div>
+
+</div><!-- /.app -->
+
+<!-- ── Extension picker modal ── -->
+<div class="modal-overlay" id="extModal">
+  <div class="modal">
+    <div class="modal-title">🔓 Выберите расширение файла</div>
+    <div class="modal-desc">
+      Укажите расширение для дешифрованного файла, чтобы система могла его правильно открыть:
+    </div>
+
+    <div class="modal-suggestions">
+      <button class="suggestion" onclick="setSuggestion('.mp4')">.mp4</button>
+      <button class="suggestion" onclick="setSuggestion('.mp3')">.mp3</button>
+      <button class="suggestion" onclick="setSuggestion('.jpg')">.jpg</button>
+      <button class="suggestion" onclick="setSuggestion('.png')">.png</button>
+      <button class="suggestion" onclick="setSuggestion('.txt')">.txt</button>
+      <button class="suggestion" onclick="setSuggestion('.pdf')">.pdf</button>
+      <button class="suggestion" onclick="setSuggestion('.docx')">.docx</button>
+      <button class="suggestion" onclick="setSuggestion('.zip')">.zip</button>
+    </div>
+
+    <input type="text" id="extInput" placeholder=".mp4" />
+
+    <div class="modal-btns">
+      <button class="btn-blue"   onclick="cancelExtModal()">Отмена</button>
+      <button class="btn-purple" onclick="confirmExtModal()">✓ Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Hidden file input -->
+<input type="file" id="fileInput" style="display:none" onchange="onFileSelected(event)" />
+
+<script src="script.js"></script>
+</body>
+</html>

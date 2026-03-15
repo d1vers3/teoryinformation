@@ -1,21 +1,15 @@
-/* ══════════════════════════════════════════════
-   CONSTANTS
-══════════════════════════════════════════════ */
+/*CONSTANTS*/
 const RU = 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ';
 const EN = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-/* ══════════════════════════════════════════════
-   STATE
-══════════════════════════════════════════════ */
+/*STATE*/
 let currentAlgo = 'grille';
 let currentMode = 'text';
 let grilleSize = 4;
 let grilleTemplate = []; // boolean[][]
 let currentRotation = 0;
 
-/* ══════════════════════════════════════════════
-   INIT
-══════════════════════════════════════════════ */
+/*INIT*/
 window.onload = () => {
   grilleTemplate = Array.from({length: 4}, () => Array(4).fill(false));
   document.getElementById('grilleInfo').innerHTML =
@@ -41,9 +35,7 @@ function calcGrilleSize(charCount) {
   return Math.max(2, n);
 }
 
-/* ══════════════════════════════════════════════
-   ALGO / MODE SWITCH
-══════════════════════════════════════════════ */
+/*ALGO / MODE SWITCH*/
 function switchAlgo(algo) {
   currentAlgo = algo;
   document.getElementById('grilleSection').classList.toggle('hidden', algo !== 'grille');
@@ -64,9 +56,7 @@ function switchMode(force) {
   document.getElementById('vigFileMode').classList.toggle('hidden', !isFile);
 }
 
-/* ══════════════════════════════════════════════
-   GRILLE CORE
-══════════════════════════════════════════════ */
+/*GRILLE CORE*/
 
 // Поворот матрицы 90° по часовой: (r,c) -> (c, n-1-r)
 function rotateMatrix(mat, n) {
@@ -89,11 +79,7 @@ function getAllRotationPositions(r, c, n) {
   return positions;
 }
 
-// Обход дырок маски в правильном порядке для данного поворота
-// rot=0: строки сверху вниз, столбцы слева направо
-// rot=1: столбцы слева направо, строки сверху вниз  
-// rot=2: строки снизу вверх, столбцы справа налево
-// rot=3: столбцы справа налево, строки снизу вверх
+
 function getBaseHoleOrder(template, n) {
   const holes = [];
   for (let r = 0; r < n; r++)
@@ -226,9 +212,7 @@ function renderGrillePreviewWithLetters(template, n, filledGrid, perRotGrids) {
   }
 }
 
-/* ══════════════════════════════════════════════
-   GRILLE ENCRYPT / DECRYPT
-══════════════════════════════════════════════ */
+/*GRILLE ENCRYPT / DECRYPT*/
 function grilleClean(text) {
   return text.toUpperCase().split('').filter(c => EN.includes(c)).join('');
 }
@@ -360,9 +344,7 @@ function grilleProcess(decrypt) {
   document.getElementById('grilleOutput').value = res;
 }
 
-/* ══════════════════════════════════════════════
-   GRILLE FILE PROCESS
-══════════════════════════════════════════════ */
+/*GRILLE FILE PROCESS*/
 
 // Преобразует шаблон решётки в строку для файла
 function grilleTemplateToString(template) {
@@ -375,9 +357,8 @@ function stringToGrilleTemplate(str) {
 }
 
 // Шифрование файла
-/* ══════════════════════════════════════════════
-   GRILLE FILE PROCESS
-══════════════════════════════════════════════ */
+/*GRILLE FILE PROCESS*/
+
 function grilleEncryptFile(file) {
   const reader = new FileReader();
   reader.onload = e => {
@@ -430,9 +411,7 @@ function grilleFileProcess(decrypt) {
   if (decrypt) grilleDecryptFile(file);
   else grilleEncryptFile(file);
 }
-/* ══════════════════════════════════════════════
-   VIGENERE PROGRESSIVE
-══════════════════════════════════════════════ */
+/* VIGENERE PROGRESSIVE */
 function vigClean(text) {
   // Только для ключа - удаляем все не-русские буквы
   return text.toUpperCase().split('').filter(c => RU.includes(c)).join('');
@@ -533,9 +512,7 @@ function vigFileProcess(decrypt) {
   reader.readAsText(file);
 }
 
-/* ══════════════════════════════════════════════
-   UTILITY
-══════════════════════════════════════════════ */
+/*UTILITY*/
 function clearFields(...ids) {
   ids.forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
 }
