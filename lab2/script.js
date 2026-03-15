@@ -114,14 +114,14 @@ function setMode(m) {
   btn.className   = isEnc ? 'btn-green' : 'btn-purple';
 
   document.getElementById('labelOut').textContent = isEnc
-    ? 'Зашифрованный файл — первые 8 байт (двоичный вид)'
-    : 'Дешифрованный файл — первые 8 байт (двоичный вид)';
+    ? 'Зашифрованный файл — первые 8 байт'
+    : 'Дешифрованный файл — первые 8 байт';
   document.getElementById('labelOut').className = 'field-label ' + (isEnc ? 'out-enc' : 'out-dec');
   document.getElementById('tbOut').className    = 'bin-field ' + (isEnc ? 'enc' : 'dec');
 
   document.getElementById('labelIn').textContent = isEnc
-    ? 'Исходный файл — первые 8 байт (двоичный вид)'
-    : 'Зашифрованный файл — первые 8 байт (двоичный вид)';
+    ? 'Исходный файл — первые 8 байт '
+    : 'Зашифрованный файл — первые 8 байт';
 
   resetFile();
 }
