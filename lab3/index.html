@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Шифратор Эль-Гамаля</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- TOP NAV -->
+<nav class="topnav">
+  <div class="topnav-logo">Эль<span>-</span>Гамаль</div>
+  <div class="topnav-tabs">
+    <button class="ntab on" onclick="switchTab('enc')">🔐 Шифрование</button>
+    <button class="ntab"    onclick="switchTab('dec')">🔓 Расшифрование</button>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- ════════════════════════════════
+       ШИФРОВАНИЕ
+  ════════════════════════════════ -->
+  <div id="pane-enc" class="pane on">
+
+    <!-- LEFT: controls -->
+    <div class="controls">
+      <div class="controls-body">
+
+        <!-- Шаг 1 -->
+        <div class="card active open" id="c1">
+          <div class="card-head" onclick="tog('c1')">
+            <div class="card-num">1</div>
+            <div class="card-label">Простое число p и корни</div>
+            <div class="card-arrow">▶</div>
+          </div>
+          <div class="card-body">
+            <div class="field">
+              <label>p — простое число (рек. 257 – 9973)</label>
+              <input type="number" id="ep" value="257" min="5" max="999983">
+            </div>
+            <button class="btn btn-accent btn-block" onclick="findRoots()">
+              Найти все первообразные корни
+            </button>
+            <div id="m1"></div>
+            <div id="rchips" class="chips"></div>
+            <div id="roots-note" class="note"></div>
+          </div>
+        </div>
+
+        <!-- Шаг 2 -->
+        <div class="card" id="c2">
+          <div class="card-head" onclick="tog('c2')">
+            <div class="card-num">2</div>
+            <div class="card-label">Параметры ключа</div>
+            <div class="card-arrow">▶</div>
+          </div>
+          <div class="card-body">
+            <div class="field">
+              <label>g — первообразный корень (кликнуть выше)</label>
+              <input type="number" id="eg" placeholder="выберите g из списка" min="2">
+            </div>
+            <div class="row-2">
+              <div class="field">
+                <label>x — закрытый ключ (1 &lt; x &lt; p−1)</label>
+                <input type="number" id="ex" value="19" min="2">
+              </div>
+              <div class="field">
+                <label>k — сессионный ключ (1-й блок)</label>
+                <input type="number" id="ek" value="7" min="2">
+              </div>
+            </div>
+            <button class="btn btn-accent btn-block" onclick="buildKey()">
+              Построить ключ
+            </button>
+            <div id="m2"></div>
+            <div id="key-display"></div>
+          </div>
+        </div>
+
+        <!-- Шаг 3 -->
+        <div class="card" id="c3">
+          <div class="card-head" onclick="tog('c3')">
+            <div class="card-num">3</div>
+            <div class="card-label">Файл для шифрования</div>
+            <div class="card-arrow">▶</div>
+          </div>
+          <div class="card-body">
+            <div class="drop" id="enc-drop"
+              onclick="document.getElementById('enc-fi').click()"
+              ondragover="dov(event)" ondragleave="dlv(event)" ondrop="ddr(event,'enc')">
+              <input type="file" id="enc-fi" onchange="handleFile(event,'enc')">
+              <span class="drop-icon">↑</span>
+              Перетащите или нажмите для выбора<br>
+              <small style="font-size:10px;color:var(--text3)">JPG · PNG · MP3 · PDF · TXT · любой формат</small>
+            </div>
+            <div id="enc-fbadge" style="display:none"></div>
+          </div>
+        </div>
+
+        <!-- Шаг 4 -->
+        <div class="card" id="c4">
+          <div class="card-head" onclick="tog('c4')">
+            <div class="card-num">4</div>
+            <div class="card-label">Зашифровать и сохранить</div>
+            <div class="card-arrow">▶</div>
+          </div>
+          <div class="card-body">
+            <div class="btn-row" style="margin-top:0">
+              <button class="btn btn-accent" style="flex:1" onclick="doEncrypt()">
+                Зашифровать
+              </button>
+              <button class="btn btn-green" style="flex:1" id="btn-save-cipher" disabled onclick="saveCipher()">
+                Сохранить .elg
+              </button>
+            </div>
+            <progress id="enc-prog" style="display:none"></progress>
+            <div id="m4"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT: output -->
+    <div class="output" id="enc-output">
+      <div class="empty-state" id="enc-empty">
+        <div class="ei">🔐</div>
+        <p>Задайте параметры слева<br>и найдите первообразные корни</p>
+      </div>
+
+      <!-- Таблица корней -->
+      <div id="main-roots" style="display:none">
+        <div class="out-title">Первообразные корни по модулю p</div>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="s-lbl">p</div><div class="s-val" id="mr-p">—</div></div>
+          <div class="stat-card"><div class="s-lbl">p − 1</div><div class="s-val" id="mr-pm1">—</div></div>
+          <div class="stat-card"><div class="s-lbl">Делители (p−1)</div><div class="s-val" id="mr-facs" style="font-size:12px">—</div></div>
+          <div class="stat-card"><div class="s-lbl">Всего корней</div><div class="s-val" id="mr-count">—</div></div>
+        </div>
+        <div class="out-panel">
+          <div class="out-panel-hd">
+            <span class="ptitle">Таблица первообразных корней</span>
+            <span class="psub">g^((p−1)/q) ≢ 1 (mod p) для каждого простого q | (p−1)</span>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>g (корень)</th>
+                  <th>g^((p−1)/q₁) mod p</th>
+                  <th>g^(p−1) mod p</th>
+                </tr>
+              </thead>
+              <tbody id="roots-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Информация о ключе -->
+      <div id="main-key" style="display:none">
+        <div class="out-title">Параметры ключа</div>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="s-lbl">Открытый ключ</div><div class="s-val" style="font-size:11px;line-height:1.5" id="mk-pub">—</div></div>
+          <div class="stat-card"><div class="s-lbl">Закрытый ключ</div><div class="s-val" id="mk-priv">—</div></div>
+          <div class="stat-card"><div class="s-lbl">Сессионный k₁</div><div class="s-val" id="mk-k0">—</div></div>
+        </div>
+        <div class="out-panel">
+          <div class="out-panel-hd">
+            <span class="ptitle">Вычисление y = g^x mod p</span>
+          </div>
+          <div style="padding:14px 16px">
+            <div class="key-box" id="mk-formula">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Результат шифрования -->
+      <div id="main-enc" style="display:none">
+        <div class="out-title">Результат шифрования</div>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="s-lbl">Исходный размер</div><div class="s-val" id="me-orig">—</div></div>
+          <div class="stat-card"><div class="s-lbl">Блоков (пар)</div><div class="s-val" id="me-pairs">—</div></div>
+          <div class="stat-card"><div class="s-lbl">Размер .elg</div><div class="s-val" id="me-size">—</div></div>
+          <div class="stat-card"><div class="s-lbl">Исх. расширение</div><div class="s-val" id="me-ext">—</div></div>
+        </div>
+        <div class="out-panel">
+          <div class="out-panel-hd">
+            <span class="ptitle">Зашифрованные блоки (a, b) — десятичная система</span>
+            <span class="psub">b = m · y^k mod p &nbsp;|&nbsp; a = g^k mod p</span>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Блок</th>
+                  <th>m (байт)</th>
+                  <th>k</th>
+                  <th>a = g^k mod p</th>
+                  <th>b = m·y^k mod p</th>
+                </tr>
+              </thead>
+              <tbody id="enc-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /pane-enc -->
+
+
+  <!-- ════════════════════════════════
+       РАСШИФРОВАНИЕ
+  ════════════════════════════════ -->
+  <div id="pane-dec" class="pane">
+
+    <!-- LEFT: controls -->
+    <div class="controls">
+      <div class="controls-body">
+
+        <!-- Параметры -->
+        <div class="card active open" id="cd1">
+          <div class="card-head" onclick="tog('cd1')">
+            <div class="card-num">1</div>
+            <div class="card-label">Параметры расшифрования</div>
+            <div class="card-arrow">▶</div>
+          </div>
+          <div class="card-body">
+            <div class="row-3">
+              <div class="field">
+                <label>p</label>
+                <input type="number" id="dp" min="5" placeholder="257">
+              </div>
+              <div class="field">
+                <label>g</label>
+                <input type="number" id="dg" min="2" placeholder="3">
+              </div>
+              <div class="field">
+                <label>x (закрытый)</label>
+                <input type="number" id="dx" min="2" placeholder="19">
+              </div>
+            </div>
+            <button class="btn btn-block" onclick="fillDec()" style="margin-top:4px">
+              Взять из сеанса шифрования
+            </button>
+            <div id="mdp"></div>
+          </div>
+        </div>
+
+        <!-- Загрузка файла -->
+        <div class="card" id="cd2">
+          <div class="card-head" onclick="tog('cd2')">
+            <div class="card-num">2</div>
+            <div class="card-label">Загрузить .elg файл</div>
+            <div class="card-arrow">▶</div>
+          </div>
+          <div class="card-body">
+            <div class="drop" id="dec-drop"
+              ondragover="dov(event)" ondragleave="dlv(event)" ondrop="ddr(event,'dec')">
+              <input type="file" id="dec-fi" onchange="handleFile(event,'dec')">
+              <span class="drop-icon">↑</span>
+              Перетащите .elg файл сюда<br>
+              <small style="font-size:10px;color:var(--text3)">или нажмите кнопку ниже</small>
+            </div>
+            <button class="btn btn-block" style="margin-top:8px" onclick="document.getElementById('dec-fi').click()">
+              Выбрать файл
+            </button>
+            <div id="dec-fbadge" style="display:none"></div>
+          </div>
+        </div>
+
+        <!-- Действие -->
+        <div class="card" id="cd3">
+          <div class="card-head" onclick="tog('cd3')">
+            <div class="card-num">3</div>
+            <div class="card-label">Расшифровать и сохранить</div>
+            <div class="card-arrow">▶</div>
+          </div>
+          <div class="card-body">
+            <div class="btn-row" style="margin-top:0">
+              <button class="btn btn-accent" style="flex:1" onclick="doDecrypt()">
+                Расшифровать
+              </button>
+              <button class="btn btn-green" style="flex:1" id="btn-save-dec" disabled onclick="saveDecrypted()">
+                Сохранить файл
+              </button>
+            </div>
+            <progress id="dec-prog" style="display:none"></progress>
+            <div id="mdc"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT: output -->
+    <div class="output" id="dec-output">
+      <div class="empty-state" id="dec-empty">
+        <div class="ei">🔓</div>
+        <p>Введите параметры и загрузите .elg файл<br>чтобы начать расшифрование</p>
+      </div>
+
+      <div id="main-dec" style="display:none">
+        <div class="out-title">Результат расшифрования</div>
+        <div class="stat-grid">
+          <div class="stat-card"><div class="s-lbl">Пар (a, b)</div><div class="s-val" id="md-pairs">—</div></div>
+          <div class="stat-card"><div class="s-lbl">Байт восстановлено</div><div class="s-val" id="md-bytes">—</div></div>
+          <div class="stat-card"><div class="s-lbl">Формат файла</div><div class="s-val" id="md-ext">—</div></div>
+        </div>
+        <div class="out-panel">
+          <div class="out-panel-hd">
+            <span class="ptitle">Расшифрованные блоки</span>
+            <span class="psub">m = b · (a^x)⁻¹ mod p</span>
+          </div>
+          <div class="tbl-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Блок</th>
+                  <th>a</th>
+                  <th>b</th>
+                  <th>a^x mod p</th>
+                  <th>m (байт)</th>
+                </tr>
+              </thead>
+              <tbody id="dec-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /pane-dec -->
+
+</div><!-- /page -->
+
+<script src="app.js"></script>
+</body>
+</html>
